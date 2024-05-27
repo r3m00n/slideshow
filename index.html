@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slideshow</title>
+    <link
+      rel="shortcut icon"
+      href="https://em-content.zobj.net/source/apple/391/framed-picture_1f5bc-fe0f.png"
+      type="image/x-icon"
+    />
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: black;
+      }
+      #slideshow {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      .slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        opacity: 0;
+        transition: opacity 2s ease;
+      }
+      .fade-in {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="slideshow"></div>
+    <script>
+      const imageFolder = 'images/';
+
+      async function fetchImageFiles() {
+        const response = await fetch('/images');
+        if (response.ok) {
+          return response.json();
+        } else {
+          console.error('Failed to load images');
+          return [];
+        }
+      }
+
+      async function startSlideshow() {
+        const imageFiles = await fetchImageFiles();
+        if (imageFiles.length === 0) return;
+
+        const slideshow = document.getElementById('slideshow');
+        let currentIndex = 0;
+
+        function showNextImage() {
+          const currentSlide = document.createElement('div');
+          currentSlide.className = 'slide';
+          currentSlide.style.backgroundImage = `url(${imageFolder + imageFiles[currentIndex]})`;
+
+          const previousSlide = slideshow.querySelector('.slide');
+          slideshow.appendChild(currentSlide);
+
+          // Force a reflow
+          void currentSlide.offsetWidth;
+
+          currentSlide.classList.add('fade-in');
+
+          if (previousSlide) {
+            previousSlide.classList.remove('fade-in');
+            setTimeout(() => {
+              previousSlide.remove();
+            }, 2000); // Match the transition duration
+          }
+
+          currentIndex = (currentIndex + 1) % imageFiles.length;
+        }
+
+        // Shuffle the image files array
+        function shuffle(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+          return array;
+        }
+
+        shuffle(imageFiles);
+        showNextImage();
+        setInterval(showNextImage, 5000);
+      }
+
+      startSlideshow();
+    </script>
+  </body>
+</html>
